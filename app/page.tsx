@@ -12,13 +12,13 @@ export default function Home() {
           href="/user"
           className="bg-blue-500 text-white px-6 py-3 rounded text-center hover:bg-blue-600"
         >
-          ユーザーとして使う
+          ＠＠ユーザーとして使う
         </Link>
         <Link
           href="/store"
           className="bg-green-500 text-white px-6 py-3 rounded text-center hover:bg-green-600"
         >
-          店舗として使う
+          ＠＠店舗として使う
         </Link>
       </div>
     </main>
