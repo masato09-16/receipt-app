@@ -85,15 +85,6 @@ export default function StoreReceiptPage() {
 
   return (
     <main className="max-w-xl mx-auto mt-10 p-6 bg-white shadow rounded">
-      {/* 🔗 ナビゲーションリンク */}
-      <div className="mb-6 flex gap-4">
-        <Link href="/store/register" className="text-blue-600 hover:underline">
-          店舗登録へ
-        </Link>
-        <Link href="/store/products" className="text-blue-600 hover:underline">
-          商品管理へ →
-        </Link>
-      </div>
 
       <h1 className="text-xl font-bold mb-4">レシート登録</h1>
 
