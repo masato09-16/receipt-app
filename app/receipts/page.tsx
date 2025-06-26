@@ -1,9 +1,8 @@
 'use client';
 
-import { auth } from '../../lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { db } from '../../lib/firebase';
+import { auth, db } from '../../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 
 export default function ReceiptListPage() {
@@ -33,22 +32,37 @@ export default function ReceiptListPage() {
   }, [userEmail]);
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">あなたのレシート一覧</h1>
+    <div className="p-6 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6 text-center">🧾 あなたの電子レシート</h1>
+
       {receipts.length === 0 ? (
-        <p>レシートが見つかりませんでした。</p>
+        <p className="text-center text-gray-500">レシートが見つかりませんでした。</p>
       ) : (
         receipts.map((receipt) => (
-          <div key={receipt.id} className="mb-6 p-4 border rounded bg-white shadow">
-            <p className="font-bold">店舗名: {receipt.store_name}</p>
-            <p>日付: {receipt.date}</p>
-            <p>合計: {receipt.total} 円</p>
-            <p className="mt-2 font-semibold">商品一覧:</p>
-            <ul className="list-disc list-inside">
+          <div key={receipt.id} className="mb-8 p-6 bg-white rounded-lg shadow border">
+            <h2 className="text-lg font-semibold text-center mb-2">電子レシート</h2>
+            <p><span className="font-semibold">📍 店舗名:</span> {receipt.store_name}</p>
+            <p><span className="font-semibold">📅 日付:</span> {receipt.date}</p>
+            <p><span className="font-semibold">👤 ユーザー:</span> {receipt.user_email}</p>
+
+            <hr className="my-2" />
+
+            <div className="text-sm">
+              <div className="flex justify-between font-semibold border-b py-1">
+                <span>商品名</span>
+                <span>価格</span>
+              </div>
               {receipt.items.map((item: any, idx: number) => (
-                <li key={idx}>{item.name} - {item.price}円</li>
+                <div key={idx} className="flex justify-between py-1">
+                  <span>{item.name}</span>
+                  <span>¥{item.price}</span>
+                </div>
               ))}
-            </ul>
+              <div className="flex justify-between font-bold border-t mt-2 pt-2">
+                <span>合計</span>
+                <span>¥{receipt.total}</span>
+              </div>
+            </div>
           </div>
         ))
       )}
