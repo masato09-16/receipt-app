@@ -1,14 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { db, auth } from '../../../lib/firebase';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 export default function StoreReceiptPage() {
   const [userEmail, setUserEmail] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
+  const scannerRef = useRef<HTMLDivElement>(null);
+
   const [storeEmail, setStoreEmail] = useState('');
   const [storeName, setStoreName] = useState('');
   const [storeAddress, setStoreAddress] = useState('');
@@ -94,6 +98,27 @@ export default function StoreReceiptPage() {
     calculateTotal();
   }, [items, deposit]);
 
+  useEffect(() => {
+    if (showScanner && scannerRef.current) {
+      const scanner = new Html5QrcodeScanner(
+        'qr-reader',
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        false
+      );
+      scanner.render(
+        (decodedText) => {
+          setUserEmail(decodedText);
+          setShowScanner(false);
+          scanner.clear();
+        },
+        (errorMessage) => {}
+      );
+      return () => {
+        scanner.clear().catch(() => {});
+      };
+    }
+  }, [showScanner]);
+
   const handleAddItem = () => {
     setItems([...items, { name: '', price: '' }]);
   };
@@ -146,14 +171,27 @@ export default function StoreReceiptPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-gray-600 mb-1">ユーザーのメールアドレス</label>
-          <input
-            type="email"
-            value={userEmail}
-            onChange={(e) => setUserEmail(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg p-2"
-          />
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+              required
+              className="w-full border border-gray-300 rounded-lg p-2"
+            />
+            <button
+              type="button"
+              onClick={() => setShowScanner(!showScanner)}
+              className="bg-blue-600 text-white px-3 rounded"
+            >
+              📷
+            </button>
+          </div>
         </div>
+
+        {showScanner && (
+          <div id="qr-reader" ref={scannerRef} className="mb-4 w-full max-w-md" />
+        )}
 
         <div>
           <label className="block text-gray-600 mb-1">商品一覧</label>

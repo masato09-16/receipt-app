@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../../../lib/firebase';
 import { useRouter } from 'next/navigation';
+import QRCode from 'react-qr-code';
 import '../../globals.css';
 
 export default function ProtectedLayout({
@@ -15,7 +16,7 @@ export default function ProtectedLayout({
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
       if (!user) {
         router.push('/user/login');
       } else {
@@ -40,7 +41,21 @@ export default function ProtectedLayout({
             <p className="text-sm text-gray-300">ログイン中:</p>
             <p className="text-sm break-all">{userEmail}</p>
           </div>
+
+          {/* QRコード表示 */}
+          {userEmail && (
+            <div className="mt-6">
+              <h3 className="text-sm text-gray-300 mb-2">提示用QRコード</h3>
+              <div className="bg-white p-2 rounded w-fit mx-auto">
+                <QRCode value={userEmail} size={128} />
+              </div>
+              <p className="text-xs text-center mt-2 break-all text-gray-300">
+                {userEmail}
+              </p>
+            </div>
+          )}
         </div>
+
         <button
           onClick={handleLogout}
           className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded text-sm"
