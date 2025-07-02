@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { db, auth } from '../../../lib/firebase';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Html5QrcodeScanner } from 'html5-qrcode';
@@ -126,12 +126,23 @@ export default function StoreReceiptPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const today = new Date().toISOString().slice(0, 10);
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      alert('ログイン情報が見つかりません');
+      return;
+    }
+
+    const idToken = await currentUser.getIdToken();
+
     const res = await fetch('/api/store/register-receipt', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`,
+      },
       body: JSON.stringify({
         user_email: userEmail,
-        store_email: storeEmail,
         store_name: storeName,
         store_address: storeAddress,
         store_note: storeNote,
@@ -147,6 +158,7 @@ export default function StoreReceiptPage() {
         date: today,
       }),
     });
+
     if (res.ok) {
       alert('レシート登録に成功しました');
       setUserEmail('');

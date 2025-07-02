@@ -1,15 +1,37 @@
+// app/api/store/register-receipt/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '../../../../lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
+
+// Admin SDK の初期化（重複防止）
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID!,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
+    }),
+  });
+}
+
+const adminAuth = getAuth();
+const adminDb = getFirestore();
 
 export async function POST(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+
+  if (!token) {
+    return NextResponse.json({ message: 'Missing or invalid token' }, { status: 401 });
+  }
+
   try {
+    const decoded = await adminAuth.verifyIdToken(token);
     const data = await req.json();
 
-    // 明示的に各フィールドを展開して保存
     const {
       user_email,
-      store_email, // ✅ 追加されていることが重要
       store_name,
       store_address,
       store_note,
@@ -25,9 +47,9 @@ export async function POST(req: NextRequest) {
       date,
     } = data;
 
-    await addDoc(collection(db, 'receipts'), {
+    await adminDb.collection('receipts').add({
       user_email,
-      store_email,      // ✅ クエリに必要なフィールド
+      store_email: decoded.email, // ← 信頼できるログイン中の店舗メールをここでセット
       store_name,
       store_address,
       store_note,
@@ -41,11 +63,12 @@ export async function POST(req: NextRequest) {
       register_no,
       staff,
       date,
+      created_at: new Date().toISOString(),
     });
 
     return NextResponse.json({ message: 'Firestoreに保存完了' }, { status: 200 });
   } catch (err) {
-    console.error('❌ Firestore保存エラー:', err);
+    console.error('❌ 認証またはFirestore保存エラー:', err);
     return NextResponse.json({ message: '保存に失敗しました' }, { status: 500 });
   }
 }
